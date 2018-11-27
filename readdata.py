@@ -5,22 +5,10 @@ from hashlib import md5
 from time import sleep
 
 from pygatt import BLEAddressType, GATTToolBackend, exceptions
-
+from config import ONEWHEEL_MAC
 from onewheel import UUIDs
 
-
-def load_cli_configuration():
-    """ configure CLI arguments and return the device address """
-    parser = ArgumentParser()
-    parser.add_argument("device", type=str,
-                        help="bluetooth address of the Onewheel to connect to")
-    parser.add_argument("-v", "--verbose", action="store_true",
-                        help="increase output verbosity")
-    args = parser.parse_args()
-    if args.verbose:
-        logging.basicConfig()
-        logging.getLogger('pygatt').setLevel(logging.DEBUG)
-    return args.device
+import json
 
 
 adapter = GATTToolBackend()
@@ -28,24 +16,52 @@ ADDRESS_TYPE = BLEAddressType.public
 key_input = bytearray()
 
 
-def main():
-    ow_mac = load_cli_configuration()
+def get_json_data():
+    """ Build json blob to send to HA via paho MQTT"""
+    data = {}
     adapter.start()
-    device = adapter.connect(ow_mac, address_type=ADDRESS_TYPE)
+    device = adapter.connect(ONEWHEEL_MAC, address_type=ADDRESS_TYPE)
+    done = False
     try:
         unlock_gatt_sequence(device)
-        print("Reading Onewheel status:")
-        battery_remaining_value = device.char_read(UUIDs.BatteryRemaining)
-        lifetime_odometer_value = device.char_read(UUIDs.LifetimeOdometer)
-        trip_odometer_value = device.char_read(UUIDs.Odometer)
-        print("Battery Remaining: %s%%" % int(hexlify(battery_remaining_value), 16))
-        print("Lifetime Odometer: %s Miles" % int(hexlify(lifetime_odometer_value), 16))
-        print("Trip Odometer: %s Miles" % int(hexlify(trip_odometer_value), 16))
     except exceptions.NotificationTimeout:
-        print("Timed out.")
+        print("Timed out trying to connect, lets keep trying anyway")
+        pass
+    try:
+        print("Reading values...")
+        battery_remaining_value = device.char_read(UUIDs.BatteryRemaining)
+        data['battery_remaining'] = get_human_friendly(battery_remaining_value)
+
+        lifetime_odometer_value = device.char_read(UUIDs.LifetimeOdometer)
+        data['lifetime_odometer'] = get_human_friendly(lifetime_odometer_value)
+
+        trip_odometer_value = device.char_read(UUIDs.Odometer)
+        data['trip_odometer'] = get_human_friendly(trip_odometer_value)
+
+        pitch_value = device.char_read(UUIDs.TiltAnglePitch)
+        pitch_raw = get_human_friendly(pitch_value)
+        data['pitch'] = round((pitch_raw / 10) - 360, 1)
+
+        roll_value = device.char_read(UUIDs.TiltAngleRoll)
+        roll_raw = get_human_friendly(roll_value)
+        data['roll'] = round(180 - (roll_raw / 10), 1)
+
+        yaw_value = device.char_read(UUIDs.TiltAngleYaw)
+        yaw_raw = get_human_friendly(yaw_value)
+        data['yaw'] = round(yaw_raw / 10, 1)
+    except exceptions.NotificationTimeout:
+        print("Timed out reading value...")
+        pass
     finally:
         device.disconnect()
         adapter.stop()
+
+    return json.dumps(data)
+
+
+def get_human_friendly(value):
+    """ Return base 10 integer from hex value"""
+    return int(hexlify(value), 16)
 
 
 def handle_key_response(_, data):
@@ -55,15 +71,15 @@ def handle_key_response(_, data):
 
 
 def unlock_gatt_sequence(device):
+    """ Unlock lasts about 25 seconds, if we are doing more than one read, we will need to call this more """
     print("Requesting encryption key...")
-    device.subscribe(UUIDs.UartSerialRead, callback=handle_key_response)
+    device.subscribe(UUIDs.UartSerialRead, callback=handle_key_response, wait_for_response=False)
     version = device.char_read(UUIDs.FirmwareRevision)
     device.char_write(UUIDs.FirmwareRevision, version, True)
     wait_for_key_response()
     key_output = create_response_key_output()
-    print("Sending unlock key...")
     device.char_write(UUIDs.UartSerialWrite, key_output)
-    device.unsubscribe(UUIDs.UartSerialRead)
+    device.unsubscribe(UUIDs.UartSerialRead, wait_for_response=False)
     sleep(0.5)  # wait a moment for unlock
 
 
@@ -98,7 +114,3 @@ def calculate_check_byte(key_output):
         check_byte = key_output[i] ^ check_byte
         i += 1
     return bytes([check_byte])
-
-
-if __name__ == "__main__":
-    main()
