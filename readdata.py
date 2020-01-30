@@ -21,7 +21,6 @@ def get_json_data():
     data = {}
     adapter.start()
     device = adapter.connect(ONEWHEEL_MAC, address_type=ADDRESS_TYPE)
-    done = False
     try:
         unlock_gatt_sequence(device)
     except exceptions.NotificationTimeout:
