@@ -22,7 +22,7 @@ def get_json_data(logger):
     adapter.start()
     try:
         device = adapter.connect(ONEWHEEL_MAC, address_type=ADDRESS_TYPE)
-    except exceptions.NotificationTimeout:
+    except (exceptions.NotificationTimeout, pygatt.exceptions.NotConnectedError):
         logger.warning('Unable connect to device. Is it busy?')
     try:
         unlock_gatt_sequence(device)
