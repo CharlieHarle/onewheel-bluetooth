@@ -98,11 +98,10 @@ def wait_for_key_response():
     """ Wait for full key from notifications with 30 second timeout """
     timeout = 30.0
     while len(key_input) < 20 and timeout > 0:
-        print("Waiting for encryption key...")
         sleep(0.25)
         timeout -= 0.25
     if timeout == 0:
-        print("Error: timeout reached waiting for encryption key response.")
+        logger.warning('Timeout reached waiting for encryption key response.')
         quit(2)
 
 
