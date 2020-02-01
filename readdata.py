@@ -58,7 +58,7 @@ def get_json_data(logger):
         adapter.stop()
 
     logger.info('Successfully received data from Onewheel: {}'.format(data))
-    return json.dumps(data)
+    return json.dumps(data) if data else None
 
 
 def get_human_friendly(value):
