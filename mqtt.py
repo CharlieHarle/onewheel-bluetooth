@@ -28,4 +28,4 @@ client.connect(BROKER_IP)
 print("Sending json blob: {}".format(json_data))
 
 client.publish(TOPIC, json_data)
-logger.info('Successfully send data to Home Assistant: {}'.format(json_data)})
+logger.info('Successfully send data to Home Assistant: {}'.format(json_data))
