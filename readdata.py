@@ -22,7 +22,7 @@ def get_json_data(logger):
     adapter.start()
     try:
         device = adapter.connect(ONEWHEEL_MAC, address_type=ADDRESS_TYPE)
-    except (exceptions.NotificationTimeout, exceptions.NotConnectedError):
+    except (exceptions.NotificationTimeout, exceptions.NotConnectedError, exceptions.BLEError):
         logger.warning('Unable connect to device. Is it busy?')
         return
     try:
