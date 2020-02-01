@@ -29,4 +29,4 @@ if json_data:
   client.publish(TOPIC, json_data)
   logger.info('Successfully sent data to Home Assistant: {}'.format(json_data))
 else:
-  logger.info('Logged nothing all to HA')
+  logger.info('Logged nothing to HA cos ble sucks')
