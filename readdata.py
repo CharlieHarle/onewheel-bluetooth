@@ -60,7 +60,6 @@ def get_json_data(logger):
         device.disconnect()
         adapter.stop()
 
-    logger.info('Successfully received data from Onewheel: {}'.format(data))
     return json.dumps(data) if data else None
 
 
