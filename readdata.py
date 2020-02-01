@@ -30,7 +30,6 @@ def get_json_data(logger):
         logger.warning('Unable to unlock gatt sequence')
         pass
     try:
-        print("Reading values...")
         battery_remaining_value = device.char_read(UUIDs.BatteryRemaining)
         data['battery_remaining'] = get_human_friendly(battery_remaining_value)
 
@@ -75,7 +74,6 @@ def handle_key_response(_, data):
 
 def unlock_gatt_sequence(device):
     """ Unlock lasts about 25 seconds, if we are doing more than one read, we will need to call this more """
-    print("Requesting encryption key...")
     device.subscribe(UUIDs.UartSerialRead, callback=handle_key_response, wait_for_response=False)
     version = device.char_read(UUIDs.FirmwareRevision)
     device.char_write(UUIDs.FirmwareRevision, version, True)

@@ -25,7 +25,8 @@ client.enable_logger()
 client.username_pw_set(username=CLIENT_NAME, password=CLIENT_PASSWORD)
 client.connect(BROKER_IP)
 
-print("Sending json blob: {}".format(json_data))
-
-client.publish(TOPIC, json_data)
-logger.info('Successfully send data to Home Assistant: {}'.format(json_data))
+if json_data:
+  client.publish(TOPIC, json_data)
+  logger.info('Successfully sent data to Home Assistant: {}'.format(json_data))
+else:
+  logger.info('Logged nothing all to HA')
