@@ -16,15 +16,18 @@ ADDRESS_TYPE = BLEAddressType.public
 key_input = bytearray()
 
 
-def get_json_data():
+def get_json_data(logger):
     """ Build json blob to send to HA via paho MQTT"""
     data = {}
     adapter.start()
-    device = adapter.connect(ONEWHEEL_MAC, address_type=ADDRESS_TYPE)
+    try:
+        device = adapter.connect(ONEWHEEL_MAC, address_type=ADDRESS_TYPE)
+    except exceptions.NotificationTimeout:
+        logger.warning('Unable connect to device. Is it busy?')
     try:
         unlock_gatt_sequence(device)
-    except exceptions.NotificationTimeout:
-        print("Timed out trying to connect, lets keep trying anyway")
+    except (exceptions.NotificationTimeout, exceptions.NotConnectedError):
+        logger.warning('Unable to unlock gatt sequence')
         pass
     try:
         print("Reading values...")
@@ -49,12 +52,13 @@ def get_json_data():
         yaw_raw = get_human_friendly(yaw_value)
         data['yaw'] = round(yaw_raw / 10, 1)
     except exceptions.NotificationTimeout:
-        print("Timed out reading value...")
+        logger.warning('Unable to read values')
         pass
     finally:
         device.disconnect()
         adapter.stop()
 
+    logger.info('Successfully received data from Onewheel: {}'.format(data))
     return json.dumps(data)
 
 

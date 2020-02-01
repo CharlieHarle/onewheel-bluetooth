@@ -1,11 +1,24 @@
+import logging
 import paho.mqtt.client as mqtt
 from readdata import get_json_data
 
 from config import BROKER_IP, CLIENT_NAME, CLIENT_PASSWORD, ONEWHEEL_MAC
 
+logging.basicConfig()
+logger = logging.getLogger('_onewheel_stats_')
+logger.setLevel(logging.INFO)
+handler = logging.FileHandler('output.log')
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
+
 TOPIC = 'home/onewheel'
 
-json_data = get_json_data()
+logger.info('Starting log sequence to topic: {}'.format(TOPIC))
+
+json_data = get_json_data(logger)
 
 client = mqtt.Client()
 client.enable_logger()
@@ -15,3 +28,4 @@ client.connect(BROKER_IP)
 print("Sending json blob: {}".format(json_data))
 
 client.publish(TOPIC, json_data)
+logger.info('Successfully send data to Home Assistant: {}'.format(json_data)})
