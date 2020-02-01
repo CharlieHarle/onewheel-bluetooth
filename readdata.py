@@ -24,11 +24,12 @@ def get_json_data(logger):
         device = adapter.connect(ONEWHEEL_MAC, address_type=ADDRESS_TYPE)
     except (exceptions.NotificationTimeout, pygatt.exceptions.NotConnectedError):
         logger.warning('Unable connect to device. Is it busy?')
+        return
     try:
         unlock_gatt_sequence(device)
     except (exceptions.NotificationTimeout, exceptions.NotConnectedError):
         logger.warning('Unable to unlock gatt sequence')
-        pass
+        return
     try:
         battery_remaining_value = device.char_read(UUIDs.BatteryRemaining)
         data['battery_remaining'] = get_human_friendly(battery_remaining_value)
@@ -52,7 +53,7 @@ def get_json_data(logger):
         data['yaw'] = round(yaw_raw / 10, 1)
     except exceptions.NotificationTimeout:
         logger.warning('Unable to read values')
-        pass
+        return
     finally:
         device.disconnect()
         adapter.stop()
