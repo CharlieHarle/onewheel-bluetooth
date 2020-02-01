@@ -25,11 +25,13 @@ def get_json_data(logger):
     except (exceptions.NotificationTimeout, exceptions.NotConnectedError, exceptions.BLEError):
         logger.warning('Unable connect to device. Is it busy?')
         return
+    logger.info('Connected to Onewheel')
     try:
         unlock_gatt_sequence(device)
     except (exceptions.NotificationTimeout, exceptions.NotConnectedError):
         logger.warning('Unable to unlock gatt sequence')
         return
+    logger.info('Unlocked onewheel')
     try:
         battery_remaining_value = device.char_read(UUIDs.BatteryRemaining)
         data['battery_remaining'] = get_human_friendly(battery_remaining_value)
