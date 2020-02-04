@@ -40,7 +40,8 @@ def get_json_data(logger):
         data['lifetime_odometer'] = get_human_friendly(lifetime_odometer_value)
 
         trip_odometer_value = device.char_read(UUIDs.Odometer)
-        data['trip_odometer'] = get_human_friendly(trip_odometer_value)
+        trip_odometer = get_human_friendly(trip_odometer_value)
+        data['trip_odometer'] = round(trip_odometer / 1670, 1)
 
         pitch_value = device.char_read(UUIDs.TiltAnglePitch)
         pitch_raw = get_human_friendly(pitch_value)
