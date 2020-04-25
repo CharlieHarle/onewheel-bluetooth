@@ -8,8 +8,8 @@ This is meant to be a quick and dirty example of how to connect and obtain data 
 
 ```python
 BROKER_IP = "192.168.1.55"
-CLIENT_NAME = "epstein"
-CLIENT_PASSWORD = "isstillalive"
+CLIENT_NAME = "bilbo"
+CLIENT_PASSWORD = "shhitsasecret"
 ONEWHEEL_MAC = "00:00:00:00:00:00"
 ```
 
